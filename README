@@ -1,4 +1,12 @@
-Checkout:
+== Checkout ==
 
-cvs -d p-krb5conf@cdcvs.fnal.gov:/cvs/projects/krb5conf co krb5conf
+  cvs -d p-krb5conf@cdcvs.fnal.gov:/cvs/projects/krb5conf co krb5conf
+
+== Make RPM ==
+NOTE: From the checkout directory
+
+  make sources
+  rpmbuild -ba --define "%_topdir `pwd`" SPECS/fermilab-conf_kerberos.spec
+  find RPMS -type f 
+  find SRPMS -type f 
 
