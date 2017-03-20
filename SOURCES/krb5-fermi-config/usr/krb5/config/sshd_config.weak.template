@@ -1,0 +1,12 @@
+#
+# This is the kerberos WEAK template file for
+# disabling insecure authentication methods
+# in ssh.
+#
+# In essence, when we do the weak configuration,
+#  we don't turn ANYTHING off.
+#
+#RhostsAuthentication no
+#RhostsRSAAuthentication no
+#RSAAuthentication no
+#PasswordAuthentication no

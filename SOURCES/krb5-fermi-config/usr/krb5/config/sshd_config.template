@@ -1,0 +1,9 @@
+#
+# This is the kerberos template file for
+# disabling insecure authentication methods
+# in ssh.
+#
+RhostsAuthentication no
+RhostsRSAAuthentication no
+RSAAuthentication no
+PasswordAuthentication no

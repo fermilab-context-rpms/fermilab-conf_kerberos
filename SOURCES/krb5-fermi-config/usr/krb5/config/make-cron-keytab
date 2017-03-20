@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# make-cron-keytab
+#
+# Script to make a keytab file for use with kcron in cases where
+# kcroninit can not be used (like for shared accounts which do
+# not have a Kerberos principal) and load the already created
+# special Kerberos principla <account>/cron/<hostname> key
+# into the the keytab file so kcron will work.
+#
+
+#
+# Check that /usr/krb5/bin and sbin directories exist and
+# for kadmin in /usr/krb5/sbin to make sure the Fermi Kerberos
+# base (or utilities) are installed.
+#
+if [ ! \( -d /usr/krb5/bin -a -d /usr/krb5/sbin \) ]
+then
+	echo "Did not find the Fermi Kerberos directories /usr/krb5/[s]bin!"
+	exit 1
+fi
+if [ ! \( -e /usr/krb5/bin/kcron -a -e /usr/krb5/bin/kcron-create \) ]
+then
+        echo "Did not find the Fermi Kerberos utilities kcron and kcron-create!"
+        exit 1
+fi
+if [ ! -u /usr/krb5/bin/kcron-create ]
+then
+		echo "The kcron-create is not installed as a setuid executable!"
+		exit 1
+fi
+
+if [ -e /usr/krb5/sbin/kadmin ]
+then
+	mykadmin=/usr/krb5/sbin/kadmin
+elif [ -e /usr/kerberos/sbin/kadmin ]
+then
+	mykadmin=/usr/kerberos/sbin/kadmin
+else
+	echo "No Kerberos kadmin utility found!"
+	exit 1
+fi
+
+#
+# Get hostname and make sure its a fully-qualified domain name
+#
+myhost=`hostname`
+mynode=`echo $myhost | cut -d"." -f1`
+if [ "$myhost" = "$mynode" ]
+then
+	echo "Hostname $myhost is not a fully qualified domain name!"
+	exit 1
+fi
+
+if [ "$USER" != "$LOGNAME" ]
+then
+		cat <<EOFEOF
+The username does not match the login name probably because you have
+used ksu to switch to the shared account.  Since the kcron-create utility
+will use the login name for the /cron principal, please exit and use
+ssh to log into the shared account and re-run this script.
+
+EOFEOF
+		exit 1
+fi
+
+#
+# Run this in the shared acocunt
+# Make the hashed file name and create the keytab file (and
+# directories if needed) - all with the correct permissions.
+#
+
+kfile=`/usr/krb5/bin/kcron -f`
+echo "Making keytab file $kfile"
+/usr/krb5/bin/kcron-create $kfile
+
+#
+# Make the principal name <user>/cron/<hostname>@FNAL.GOV
+#
+
+princ=$USER/cron/$myhost
+echo "Will load key for principal $princ into keytab file"
+
+#
+# Now put the key into a temporary keytab file, will prompt for the
+# password.
+#
+
+tempkeytab=/tmp/$kfile
+$mykadmin  -p $princ  -q "ktadd  -k  $tempkeytab  $princ"
+
+#
+# Now put the keytab file into place and cleanup.
+#
+/bin/cp  $tempkeytab  /var/adm/krb5/$kfile
+rm $tempkeytab

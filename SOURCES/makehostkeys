@@ -1,0 +1,91 @@
+#!/bin/sh
+#
+# This script is for creating the /etc/krb5.keytab file
+#
+#
+# History:
+# 21Apr2001	dawson	First wrote the script
+#
+#######################################################################
+# Variables
+REALM="FNAL.GOV"
+NODENAME=`uname -n`
+version="$1"
+
+################
+#Find Kadmin
+if [ -f /usr/krb5/sbin/kadmin ] ; then
+	KRB5_KADMIN="/usr/krb5/sbin/kadmin"
+elif [ -f /usr/kerberos/sbin/kadmin ] ; then
+	KRB5_KADMIN="/usr/kerberos/sbin/kadmin"
+else
+	KRB5_KADMIN=`which kadmin`
+fi
+
+########################################################################
+# Add starting line to original file
+ktadd_service () {
+	SERVICETOADD="$1/$NODENAME"
+	SERVICEPASSWORD="$2"
+	PRINCIPLE=$SERVICETOADD\@$REALM
+	echo $KRB5_KADMIN -r $REALM -p $PRINCIPLE -w $SERVICEPASSWORD -q "ktadd $PRINCIPLE"
+	$KRB5_KADMIN -r $REALM -p $PRINCIPLE -w $SERVICEPASSWORD -q "ktadd $PRINCIPLE"
+}
+
+########################################################################
+# Get a correct nodename
+check_hostname () {
+	echo "This machine's name is shown as: $NODENAME"
+	if [ "$(echo $NODENAME | grep fnal.gov)" = "" ] ; then
+		echo "Is this the machine's full node name? (y/n default n)"
+		read answer
+		case $answer in 
+			y | Y | yes | YES | Yes )
+				echo "Proceding with key generation."
+			;;
+			* )
+				echo "What is this machine's full node name? (example: mymachine.fnal.gov)"
+				read NODENAME
+				check_hostname
+			;;
+		esac
+	fi
+}
+
+########################################################################
+# Main Program
+
+# Don't even bother running this if we don't have kadmin
+if [ -x $KRB5_KADMIN ] ; then
+	echo " "
+	echo "Do you have the password(s) to enable the telnet and ftp services? (y/n, default y)"
+	read answer
+	case $answer in 
+	n | N | no | NO | No )
+		echo "You must have the password(s) in order to enable the telnet and ftp services.\n"
+		exit 1
+	;;
+	* )
+		check_hostname
+		echo "Password for ftp/$NODENAME service: "
+		stty -echo
+		read ftppass
+		stty echo
+		echo "Password for host/$NODENAME service: "
+		echo "(default is the same as the ftp/$NODENAME password you just entered) "
+		stty -echo
+		read hostpass
+		stty echo
+		if [ "$hostpass" = "" ] ; then
+			hostpass="$ftppass"
+		fi
+		ktadd_service "ftp" $ftppass
+		ktadd_service "host" $hostpass
+		exit 0;
+	;;
+	esac
+else
+	echo "You do not have kadmin, which comes with kerberos."
+	echo "Please make sure you have the regular kerberos binaries installed."
+	exit 2
+fi

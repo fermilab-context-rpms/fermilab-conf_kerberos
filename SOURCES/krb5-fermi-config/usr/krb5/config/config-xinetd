@@ -1,0 +1,145 @@
+#!/bin/sh
+#
+# This script will make sure that the /etc/inetd.conf
+# file has the correct entries
+#
+#
+# History:
+# 27Aug2001	dawson	first writting.  It is basically a rewrite of
+#    the config-inetd.conf script.
+#
+#
+#######################################################################
+# Variables
+KRB5CONF_DIR="/usr/krb5/config"
+KRB5CONF_TARGET_DIR="/etc/xinetd.d"
+KRB5CONF_BACKUP_DIR="/etc/xinetd.d.backup"
+KRB5CONF_SOURCE_FILE="$KRB5CONF_DIR/xinetd.template"
+
+
+nodename=`uname -n`
+datestamp=`date +%d%b%EY`
+version="$1"
+logfile=${KRB5CONF_DIR}/${nodename}.log
+additem="no"
+
+########################################################################
+# Backup the file, incase the user want's it
+backupfile() {
+	original="$1"
+	if [ -f $KRB5CONF_BACKUP_DIR/$original.$datestamp ] ; then
+		echo "$KRB5CONF_BACKUP_DIR/$original.$datestamp already exists, backup not made"
+	else
+		echo "Saving original service file as $KRB5CONF_BACKUP_DIR/$original.$datestamp"
+		if [ ! -d $KRB5CONF_BACKUP_DIR ] ; then
+			mkdir $KRB5CONF_BACKUP_DIR
+		fi
+		cp $KRB5CONF_TARGET_DIR/$original $KRB5CONF_BACKUP_DIR/$original.$datestamp
+	fi
+}
+
+
+########################################################################
+# Fix files for services that are equal
+equalout () {
+	original_service_file="$KRB5CONF_TARGET_DIR/$1"
+	kerberos_service_file="$KRB5CONF_TARGET_DIR/$2"
+	original_service="$1"
+	kerberos_service="$2"
+	
+	if [ -s $original_service_file ] ; then
+		backupfile $original_service
+		echo "This service is being replaced by $kerberos_service"
+		check_service $original_service_file
+		if [ $? -eq 0 ] ; then		
+			# This service is not being used.  Check to see
+			#   if the equal service is setup.  If so, don't touch it.
+			if [ ! -s $kerberos_service_file ] ; then
+				cp -f $KRB5CONF_DIR/$kerberos_service.xinetd $kerberos_service_file
+			fi			
+		else
+			# This service is still being used.  Set the equal service 
+			#  so that it is used
+			if [ -s $kerberos_service_file ] ; then
+				backupfile $kerberos_service
+			fi
+			cp -f $KRB5CONF_DIR/$kerberos_service.xinetd.on $kerberos_service_file
+		fi
+		rm -f $original_service_file
+	fi
+}
+
+########################################################################
+# Find out if the service is on or not
+# return a 0 if it's off, a 1 if it's on
+check_service(){
+	service_file="$1"
+	if [ -s $service_file ] ; then
+		disable_line="$(grep disable $service_file | grep -v '#')"
+		if [ "$disable_line" = "" ] ; then
+			return 1
+		else
+			disable_status="$(echo $disable_line | cut -d ' ' -f3)"
+			if [ "$disable_status" = "no" ] ; then
+				return 1
+			else
+				return 0
+			fi
+		fi
+	else
+		return 0
+	fi
+}
+
+########################################################################
+#  MAIN PROGRAM
+#First go through the file and see if we should convert any services
+#
+# Go through the template file, line by line
+cat $KRB5CONF_SOURCE_FILE | {
+	while read line
+	do
+		# See if the line is commented or not
+		testchar=`echo $line |cut -c1`
+		if [ "$testchar" != "#" ] ; then
+			# Get the first word of the line, which is the service name
+			testword=`echo $line |cut -d' ' -f1`
+			check_service $KRB5CONF_TARGET_DIR/${testword}
+			if [ $? -eq 0 ] ; then		
+				# They had this service disabled for some reason
+				#  we will respect their wishes and keep it disabled
+				if [ -s $KRB5CONF_TARGET_DIR/$testword ] ; then
+					if [ ! "$(diff -q $KRB5CONF_TARGET_DIR/$testword $KRB5CONF_DIR/$testword.xinetd)" = "" ] ; then
+						backupfile $testword
+						cp -f $KRB5CONF_DIR/$testword.xinetd $KRB5CONF_TARGET_DIR/$testword
+					fi
+				else
+					cp -f $KRB5CONF_DIR/$testword.xinetd $KRB5CONF_TARGET_DIR/$testword
+				fi
+			else
+				# This service is still being used.  
+				#  we will respect their wishes and keep it enabled
+				if [ ! "$(diff -q $KRB5CONF_TARGET_DIR/$testword $KRB5CONF_DIR/$testword.xinetd.on)" = "" ] ; then
+					backupfile $testword
+					cp -f $KRB5CONF_DIR/$testword.xinetd.on $KRB5CONF_TARGET_DIR/$testword
+				fi
+			fi
+		else
+			testextra=`echo $line |cut -d':' -f1`
+			# The line is one that is commented out, but we will check to see if
+			#  is something that is equal to another service.
+			if [ "$testextra" = "# EQUAL" ] ; then
+				#It is a equals line, run the equals stuff
+				original_service=`echo $line | cut -d' ' -f3`
+				kerberized_service=`echo $line | cut -d' ' -f4`
+				equalout ${original_service} ${kerberized_service}
+			fi
+		fi
+	done
+}
+
+echo " Appropriate xinetd services are Kerberized."
+if [ -f /etc/init.d/xinetd ] ; then
+	/etc/init.d/xinetd reload
+fi
+exit 0

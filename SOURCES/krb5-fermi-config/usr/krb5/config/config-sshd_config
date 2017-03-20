@@ -1,0 +1,104 @@
+#!/bin/sh
+#
+# This script will make sure that the /etc/sshd_config
+#  is configured correctly
+#
+#
+# History:
+# 21Apr2001	dawson	First wrote the script
+#
+#######################################################################
+# Variables
+KRB5CONF_DIR="/usr/krb5/config"
+KRB5CONF_TARGET_FILE="/etc/sshd_config"
+KRB5CONF_SOURCE_FILE="$KRB5CONF_DIR/sshd_config.template"
+
+nodename=`uname -n`
+datestamp=`date +%d%b%EY`
+version="$1"
+logfile=${KRB5CONF_DIR}/${nodename}.log
+additem="no"
+TEMPFILE="/tmp/sshd_config.temp"
+
+########################################################################
+# Backup the file, incase the user want's it
+backupfile() {
+	if [ ! -f $KRB5CONF_TARGET_FILE.$datestamp ] ; then
+		echo "Saving original service file as $KRB5CONF_TARGET_FILE.$datestamp"
+		cp $KRB5CONF_TARGET_FILE $KRB5CONF_TARGET_FILE.$datestamp
+	fi
+}
+########################################################################
+# Add starting line to original file
+addstart () {
+	backupfile
+	if [ "$additem" = "no" ] ; then
+		backupfile
+		additem="yes"
+	fi
+	echo "## MODIFIED by krb5-fermi-config ${version} ${datestamp}" >> $TEMPFILE
+}
+########################################################################
+# Comment out services from the file
+fixline () {
+	serviceline="$1 $2"
+	service="$1"
+	servicestate="$2"
+	addline="no"
+	rm -f $TEMPFILE
+	cat $KRB5CONF_TARGET_FILE | {
+		while read line
+		do
+			# Only worry about uncommented lines.
+			testchar=`echo $line |cut -c1`
+			if [ "$testchar" != "#" ] ; then
+				#get the first word of the line, which is the service name
+				testword=`echo $line |cut -d' ' -f1`
+				# Check that word to see if it's what we want
+				if [ "$testword" = "$service" ] ; then
+					teststatus=`echo $line |cut -d' ' -f2`
+					if [ "$teststatus" = "$servicestate" ] ; then
+						# The line that was found matches what we want
+						#  we will just mark that the line is in the file
+						addline="yes"
+					else
+						# This line isn't what we wanted
+						#  so we will fix it
+						addstart
+						echo "##$line" >> $TEMPFILE	
+						# If we haven't already put on the correct line
+						#  then put it on
+						if [ "$addline" != "yes" ] ; then
+							echo "$serviceline" >> $TEMPFILE
+							addline="yes"
+						fi
+					fi
+							
+				else
+					echo "$line" >> $TEMPFILE
+				fi
+			else
+				echo "$line" >> $TEMPFILE
+			fi
+		done
+		# We don't have this line in the file
+		#  we better put it in
+		if [ "$addline" != "yes" ] ; then
+			echo "$serviceline" >> $TEMPFILE			
+		fi
+	}
+	mv -f $TEMPFILE $KRB5CONF_TARGET_FILE
+}
+
+########################################################################
+# Main Program
+cat $KRB5CONF_SOURCE_FILE | {
+	while read line
+	do
+		testchar=`echo $line |cut -c1`
+		if [ "$testchar" != "#" ] ; then
+			# We have a line we need to change
+			fixline $line
+		fi
+	done
+}

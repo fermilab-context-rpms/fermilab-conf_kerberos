@@ -1,0 +1,15 @@
+# default: off
+# description: The kerberized telnet server accepts only telnet sessions, \
+#              which use Kerberos 5 authentication and encryption.
+# Fermi configuration
+service telnet
+{
+	flags		= REUSE
+	socket_type	= stream        
+	wait		= no
+	user		= root
+	server		= /usr/kerberos/sbin/telnetd
+	server_args	= -ea valid
+	log_on_failure	+= USERID
+	disable		= yes
+}

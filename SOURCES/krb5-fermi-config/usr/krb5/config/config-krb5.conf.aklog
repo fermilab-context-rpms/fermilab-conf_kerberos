@@ -1,0 +1,123 @@
+#!/bin/sh
+#
+# This script will make sure that aklog is either turned on or off
+# depending on if you have AFS installed or not.
+#
+# Written by Troy Dawson <dawson@fnal.gov>
+#########################
+# Variables
+#########################
+KRB5CONF_TARGET="/etc/krb5.conf"
+KRB5CONF_NEW="$KRB5CONF_TARGET.new"
+AFSSTATUS="(without afs)"
+DATESTAMP=`date +%d%b%EY`
+SCRIPTCONF_SOURCE="/etc/sysconfig/krb5.conf.aklog"
+if [ -f ${SCRIPTCONF_SOURCE} ] ; then
+	RUNSCRIPT=`grep CHECK-AKLOG-STATUS ${SCRIPTCONF_SOURCE} | grep -v '#' | cut -d'"' -f2`
+	CHECK_CELL=`grep CHECK-CELL ${SCRIPTCONF_SOURCE} | grep -v '#' | cut -d'"' -f2`
+	DEFAULT_CELL=`grep DEFAULT-CELL ${SCRIPTCONF_SOURCE} | grep -v '#' | cut -d'"' -f2`
+else
+	RUNSCRIPT="yes"
+	CHECK_CELL="yes"
+	DEFAULT_CELL="fnal.gov"
+fi
+
+#########################
+# Turn aklog off
+#########################
+aklog_off () {
+	rm -f ${KRB5CONF_NEW}
+	sed -e /krb5_run_aklog/s/true/false/ ${KRB5CONF_TARGET} > ${KRB5CONF_NEW}
+	chmod 644  ${KRB5CONF_NEW}
+	if ! [ -f ${KRB5CONF_TARGET}.${DATESTAMP} ] ; then
+		cp ${KRB5CONF_TARGET} ${KRB5CONF_TARGET}.${DATESTAMP}
+	fi
+	cp -f ${KRB5CONF_NEW} ${KRB5CONF_TARGET}
+}
+
+#########################
+# Turn aklog on
+#########################
+aklog_on () {
+	rm -f ${KRB5CONF_NEW}
+	cat ${KRB5CONF_TARGET} | sed -e /krb5_run_aklog/s/false/true/ > ${KRB5CONF_NEW}
+	chmod 644 ${KRB5CONF_NEW}
+	if ! [ -f ${KRB5CONF_TARGET}.${DATESTAMP} ] ; then
+		cp ${KRB5CONF_TARGET} ${KRB5CONF_TARGET}.${DATESTAMP}
+	fi
+	cp -f ${KRB5CONF_NEW} ${KRB5CONF_TARGET}
+}
+
+#########################
+# Print the help screen then exit
+#########################
+printHelp () {
+	echo "$0 [Option]"
+	echo ""
+	echo "$0 will turn aklog on or off in your krb5.conf file."
+	echo "By default, the script checks to see if you have AFS installed and turned on"
+	echo "and then checks to see if your AFS cell is set to fnal.gov."
+	echo "These checks can be changed or turned off by changing settings in the"
+	echo "configurationfile at ${SCRIPTCONF_SOURCE}"
+	echo ""
+	echo "Comand Line Options"
+	echo " -y, --yes, -o, --on"
+	echo "     Turn aklog on in krb5.conf file"
+	echo ""
+	echo " -n, --no, -f, --off"
+	echo "     Turn aklog off in krb5.conf file"
+	echo ""
+	echo " -h, --help"
+	echo "      Display this help file"
+}
+
+#########################
+# Check to see if AFS is installed and on
+#########################
+test -x /afs && test -n "`/sbin/chkconfig --list afs`" && AFSSTATUS="with afs"
+
+#########################
+# Get options passed from command line
+#########################
+while test $# != 0
+do
+	case $1 in
+		-y | -yes | --yes | --Yes | --YES | --on | -o | --ON)  
+			RUNSCRIPT="yes" ; CHECK_CELL="no" ; AFSSTATUS="with afs" ; break ;;
+		-n | -no | --no | --NO | -f | --off | --OFF)
+			RUNSCRIPT="yes" ; CHECK_CELL="no" ; AFSSTATUS="(without afs)" ; break ;;
+		-h | -help | --help | --h | --HELP) printHelp ; exit 0 ;;
+	esac
+done
+
+
+#########################
+# Main Program
+#########################
+if [ "${RUNSCRIPT}" = "yes" ] ; then
+	case "${AFSSTATUS}" in
+	*without*)
+			echo "turning aklog off in our krb5.conf"
+			aklog_off
+	    ;;
+	*)
+		if [ "${CHECK_CELL}" = "yes" ] ; then
+			if grep -qw ${DEFAULT_CELL} /usr/vice/etc/ThisCell ; then
+				echo "turning aklog on in our krb5.conf"
+			    aklog_on
+			else
+				echo "turning aklog off in our krb5.conf because we dont have the right AFS cell set"
+				echo "Your AFS cell is set in /usr/vice/etc/ThisCell"
+				echo "The cell name this is checked against is in ${SCRIPTCONF_SOURCE} which is currently ${DEFAULT_CELL}"
+			    aklog_off
+			fi
+		else
+			echo "turning aklog on in our krb5.conf"
+		    aklog_on
+		fi
+	    ;;
+	esac
+
+fi
+exit 0
+

@@ -1,0 +1,62 @@
+#!/bin/sh
+#
+# This script will make sure that the /etc/services
+# file has the correct entries
+#
+#
+# History:
+# 07Apr2001	dawson	First wrote the script.  It takes the 
+#		services.template file, and line by line, checks
+#		to make sure that line is in the /etc/services file.
+#		If it isn't, it puts it in.
+#
+#######################################################################
+# Variables
+KRB5CONF_DIR="/usr/krb5/config"
+KRB5CONF_TARGET_FILE="/etc/services"
+KRB5CONF_SOURCE_FILE="$KRB5CONF_DIR/services.template"
+
+nodename=`uname -n`
+datestamp=`date +%d%b%EY`
+version="$1"
+logfile=${KRB5CONF_DIR}/${nodename}.log
+additem="no"
+
+########################################################################
+# Add starting line to services file
+addstart () {
+	if [ -f $KRB5CONF_TARGET_FILE.$datestamp ] ; then
+		echo "$KRB5CONF_TARGET_FILE.$datestamp already exists, backup not made"
+	else
+		echo "Saving original service file as $KRB5CONF_TARGET_FILE.$datestamp"
+		cp $KRB5CONF_TARGET_FILE $KRB5CONF_TARGET_FILE.$datestamp
+	fi
+	echo "## ADDED by krb5-fermi-config ${version} ${datestamp}" >> $KRB5CONF_TARGET_FILE
+}
+########################################################################
+# Add ending line to services file
+addend () {
+	echo "## END of krb5-fermi-config ${version} additions ${datestamp}" >> $KRB5CONF_TARGET_FILE
+}
+
+cat $KRB5CONF_SOURCE_FILE | {
+	while read line
+	do
+		testchar=`echo $line |cut -c1`
+		if [ "$testchar" != "#" ] ; then
+			if ! grep "${line}" ${KRB5CONF_TARGET_FILE} >/dev/null 2>&1; then
+				if [ "$additem" != "yes" ] ; then
+					addstart
+					additem="yes"
+				fi
+				echo "${line}" >> ${KRB5CONF_TARGET_FILE}
+			fi
+		fi
+	done
+	if [ "$additem" = "yes" ] ; then
+		echo "The /etc/services file has been edited"
+		addend
+	else
+		echo "The /etc/services file did not need to be edited"	
+	fi
+}

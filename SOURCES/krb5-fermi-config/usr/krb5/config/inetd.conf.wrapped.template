@@ -1,0 +1,28 @@
+#
+# inetd.conf.template for kerberos services.
+# This file is used by the installation script
+# to modify the system's inetd.conf file.
+# The installation script will substitute the appropriate value
+# of ${KRB_ABS_TGT} as defined in the kerberos
+# table file.
+# The installation script will also determine if you have actually
+# wrapped these services in tcpwrappers via /some/path/to/tcpd,
+# and will maintain that state (i.e., if it was wrapped before,
+# it will be wrapped after the kerberos installation).
+#
+#
+# the following lines tell the installation script
+# which services are basically the same thing.
+# This should go before the lines non-commented lines
+# Syntax:
+# # EQUAL: <original_service_name> <kerberized_service_name>
+#
+# EQUAL: shell kshell
+# EQUAL: login klogin
+# EQUAL: exec eklogin
+#
+ftp     stream  tcp     nowait  root  /usr/sbin/tcpd  /usr/krb5/sbin/ftpd -aOP
+telnet  stream  tcp     nowait  root  /usr/sbin/tcpd  /usr/krb5/sbin/telnetd -Pa valid
+kshell  stream  tcp     nowait  root  /usr/sbin/tcpd  /usr/krb5/sbin/kshd -5c
+klogin  stream  tcp     nowait  root  /usr/sbin/tcpd  /usr/krb5/sbin/klogind -5c
+eklogin stream  tcp     nowait  root  /usr/sbin/tcpd  /usr/krb5/sbin/klogind -5ce

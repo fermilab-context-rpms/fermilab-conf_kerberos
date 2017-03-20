@@ -1,0 +1,23 @@
+#
+# xinetd.template for kerberos services.
+# This file is used by the installation script
+# to modify the system's xinetd.d files.
+#
+#
+# the following lines tell the installation script
+# which services are basically the same thing.
+# Syntax:
+# # EQUAL: <original_service_name> <kerberized_service_name>
+#
+# EQUAL: shell kshell
+# EQUAL: login klogin
+# EQUAL: exec eklogin
+# EQUAL: krb5-telnet telnet
+#
+# The following services have kerberized xinetd config files.
+#   
+ftp
+telnet
+kshell
+klogin
+eklogin

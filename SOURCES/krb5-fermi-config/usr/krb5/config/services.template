@@ -1,0 +1,17 @@
+#
+# services.template for kerberos services.
+# This file is used by the installation script
+# to modify the system's /etc/services file.
+# Despite whatever comments your OS may have in the services file,
+# ports 88, 543, 544, 749, 750, 4444 are officially registered as follows.
+#
+kerberos	88/udp		kdc	# Kerberos V5 key server
+kerberos	88/tcp		kdc	# Kerberos V5 key server
+klogin		543/tcp
+kshell		544/tcp		cmd
+kerberos-adm	749/tcp
+kerberos-adm	749/udp
+kerberos-iv	750/udp			# Kerberos V4
+krb5_prop	754/tcp
+eklogin		2105/tcp
+krb524		4444/udp
