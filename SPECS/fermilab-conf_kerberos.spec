@@ -78,19 +78,20 @@ augtool --noload < ${TMPFILE} > parse.out
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
+rm -rf %{buildroot}
+mkdir -p %{buildroot}
 
 ###############################################################################
 %install
-rm -rf %{buildroot}
 
 %if 0%{?rhel} >= 7
 %{__install} -D %{SOURCE1} %{buildroot}/%{_libexecdir}/%{name}/config-krb5.conf
 
 %else
+(cd %{buildroot} ; tar xvf %{SOURCE12} ; mv krb5-fermi-config/* . ; rmdir krb5-fermi-config )
 %{__install} -D %{SOURCE1} %{buildroot}/usr/krb5/config/config-krb5.conf
 %{__install} -D %{SOURCE10} %{buildroot}/usr/krb5/config/makehostkeys
 %{__install} -D %{SOURCE11} %{buildroot}/usr/krb5/config/make-cron-keytab
-(cd %{buildroot} ; tar xvf %{SOURCE12} ; mv krb5-fermi-config/* . ; rmdir krb5-fermi-config )
 %endif
 
 ###############################################################################
