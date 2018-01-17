@@ -208,6 +208,13 @@ fi
 %endif
 
 %changelog
+* Tue Jan 16 2018 Olga Terlyga <terlyga@fnal.gov> 5.3-1.5
+- Removed i-krb-6/8/17 from the list of KDCs
+- Edited [capath] section to reflect direct(only) trust between Windows domain and MIT realm
+- Added pingdev.fnal.gov and prinprod.fnal.gov to [domain_realm] section
+- Removed non-existent dns records from [domain_realm] section
+- Removed [instancemapping] section since there is no Fermi AFS
+
 * Wed Feb 10 2016 Frank Nagy <nagy@fnal.gov> 5.2-1.4
 - Accepted by Authentication Services
 
@@ -219,11 +226,3 @@ fi
 
 * Fri Aug 7 2015 Pat Riehecky <riehecky@fnal.gov> 5.2-1
 - Initial build for EL7
-
-* Tue Jan 16 2018 Olga Terlyga <terlyga@fnal.gov> 5.3-1.5
-- Removed i-krb-6/8/17 from the list of KDCs
-- Edited [capath] section to reflect direct(only) trust between Windows domain and MIT realm
-- Added pingdev.fnal.gov and prinprod.fnal.gov to [domain_realm] section
-- Removed non-existent dns records from [domain_realm] section
-- Removed [instancemapping] section since there is no Fermi AFS
-
