@@ -44,9 +44,10 @@ line in %{_sysconfdir}/krb5.kdclist
 
 %if 0%{?rhel} < 7 
 %package -n krb5-fermi-config
-Conflicts: krb5-fermi-krb5.conf
-Packager: Fermilab Authentication Services
-Summary: Configuration scripts make your Kerberos Installation Fermilab-compatible
+Conflicts:	krb5-fermi-krb5.conf
+Packager:	Fermilab Authentication Services
+Summary:	Configuration scripts make your Kerberos Installation Fermilab-compatible
+Requires:	krb5-libs coreutils policycoreutils
 
 %description -n krb5-fermi-config
 This rpm provides a krb5.conf file setup to work with the FNAL.GOV
