@@ -88,6 +88,8 @@ mkdir -p %{buildroot}
 %if 0%{?rhel} >= 7
 %{__install} -D %{SOURCE1} %{buildroot}/%{_libexecdir}/%{name}/config-krb5.conf
 %{__install} -D krb5.conf.template %{buildroot}/%{_libexecdir}/%{name}/krb5.conf.template
+mkdir -p %{buildroot}/usr/krb5/
+(cd %{buildroot}/usr/krb5/; ln -s ../../%{_libexecdir}/%{name} config)
 
 %else
 (cd %{buildroot} ; tar xvf %{SOURCE12} ; mv krb5-fermi-config/* . ; rmdir krb5-fermi-config )
@@ -196,6 +198,7 @@ fi
 %if 0%{?rhel} >= 7
 %attr(0700,root,root) %{_libexecdir}/%{name}/config-krb5.conf
 %{_libexecdir}/%{name}/krb5.conf.template
+/usr/krb5/config
 %else
 %attr(0700,root,root) /usr/krb5/config/config-krb5.conf
 %attr(0755,root,root) /usr/krb5/config/makehostkeys
