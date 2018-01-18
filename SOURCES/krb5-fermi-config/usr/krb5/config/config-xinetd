@@ -138,8 +138,8 @@ cat $KRB5CONF_SOURCE_FILE | {
 	done
 }
 
-echo " Appropriate xinetd services are Kerberized."
+echo "  Appropriate xinetd services are Kerberized."
 if [ -f /etc/init.d/xinetd ] ; then
-	/etc/init.d/xinetd reload
+	/etc/init.d/xinetd reload >/dev/null 2>&1
 fi
 exit 0

@@ -26,9 +26,9 @@ additem="no"
 # Add starting line to services file
 addstart () {
 	if [ -f $KRB5CONF_TARGET_FILE.$datestamp ] ; then
-		echo "$KRB5CONF_TARGET_FILE.$datestamp already exists, backup not made"
+		echo "  $KRB5CONF_TARGET_FILE.$datestamp already exists, backup not made"
 	else
-		echo "Saving original service file as $KRB5CONF_TARGET_FILE.$datestamp"
+		echo "  Saving original service file as $KRB5CONF_TARGET_FILE.$datestamp"
 		cp $KRB5CONF_TARGET_FILE $KRB5CONF_TARGET_FILE.$datestamp
 	fi
 	echo "## ADDED by krb5-fermi-config ${version} ${datestamp}" >> $KRB5CONF_TARGET_FILE
@@ -54,9 +54,9 @@ cat $KRB5CONF_SOURCE_FILE | {
 		fi
 	done
 	if [ "$additem" = "yes" ] ; then
-		echo "The /etc/services file has been edited"
+		echo "  The /etc/services file has been edited"
 		addend
 	else
-		echo "The /etc/services file did not need to be edited"	
+		echo "  The /etc/services file did not need to be edited"	
 	fi
 }

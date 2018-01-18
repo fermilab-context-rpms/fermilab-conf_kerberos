@@ -1,5 +1,5 @@
 %define package_version 5.3
-%define package_release 1.5
+%define package_release 1.6
 
 
 %if 0%{?rhel} >= 7 
@@ -86,12 +86,14 @@ mkdir -p %{buildroot}
 
 %if 0%{?rhel} >= 7
 %{__install} -D %{SOURCE1} %{buildroot}/%{_libexecdir}/%{name}/config-krb5.conf
+%{__install} -D krb5.conf.template %{buildroot}/%{_libexecdir}/%{name}/krb5.conf.template
 
 %else
 (cd %{buildroot} ; tar xvf %{SOURCE12} ; mv krb5-fermi-config/* . ; rmdir krb5-fermi-config )
 %{__install} -D %{SOURCE1} %{buildroot}/usr/krb5/config/config-krb5.conf
 %{__install} -D %{SOURCE10} %{buildroot}/usr/krb5/config/makehostkeys
 %{__install} -D %{SOURCE11} %{buildroot}/usr/krb5/config/make-cron-keytab
+%{__install} -D krb5.conf.template %{buildroot}/usr/krb5/config/krb5.conf.template
 %endif
 
 ###############################################################################
@@ -106,11 +108,16 @@ bash -n %{buildroot}/usr/krb5/config/config-krb5.conf
 %post -p /bin/bash
 if [[ -f %{_sysconfdir}/krb5.conf ]]; then
 %if 0%{?rhel} < 7
-    echo "We need a fresh krb5.conf, moving old krb5.conf to %{_sysconfdir}/krb5.conf.save.pre-%{name}-%{version}-%{release}"
+    echo "   We need a fresh krb5.conf, moving old krb5.conf to %{_sysconfdir}/krb5.conf.save.pre-%{name}-%{version}-%{release}"
 %endif
     %{__mv} %{_sysconfdir}/krb5.conf %{_sysconfdir}/krb5.conf.save.pre-%{name}-%{version}-%{release}
 fi
-%{__cat} %{_defaultdocdir}/%{name}-%{version}/krb5.conf.template > %{_sysconfdir}/krb5.conf
+
+%if 0%{?rhel} < 7
+%{__cat} /usr/krb5/config/krb5.conf.template > %{_sysconfdir}/krb5.conf
+%else
+%{__cat} %{_libexecdir}/%{name}/krb5.conf.template > %{_sysconfdir}/krb5.conf
+%endif
 
 %if 0%{?rhel} >= 7
 %{_libexecdir}/%{name}/config-krb5.conf %{version}
@@ -124,10 +131,10 @@ restorecon -F %{_sysconfdir}/krb5.conf
 %if 0%{?rhel} < 7 
 %post -n krb5-fermi-config
 if [[ -f %{_sysconfdir}/krb5.conf ]]; then
-    echo "We need a fresh krb5.conf, moving old krb5.conf to %{_sysconfdir}/krb5.conf.save.pre-%{name}-%{version}-%{release}"
+    echo "   We need a fresh krb5.conf, moving old krb5.conf to %{_sysconfdir}/krb5.conf.save.pre-%{name}-%{version}-%{release}"
     %{__mv} %{_sysconfdir}/krb5.conf %{_sysconfdir}/krb5.conf.save.pre-%{name}-%{version}-%{release}
 fi
-%{__cat} %{_defaultdocdir}/%{name}-%{version}/krb5.conf.template > %{_sysconfdir}/krb5.conf
+%{__cat} /usr/krb5/config/krb5.conf.template > %{_sysconfdir}/krb5.conf
 
 /usr/krb5/config/config-krb5.conf %{version}
 
@@ -155,8 +162,8 @@ fi
 if [ -f /etc/sshd_conf ] ; then
         /usr/krb5/config/config-sshd_config %{version}
 fi
-echo "Your computer is now configured to run Kerberos"
-echo "If you need a host principal you should run '/usr/krb5/config/makehostkeys'"
+echo "   Your computer is now configured to run Kerberos"
+echo "   If you need a host principal you should run '/usr/krb5/config/makehostkeys'"
 
 %triggerin -n krb5-fermi-config -- krb5-workstation
 if [ -d /etc/xinetd.d ] ; then
@@ -167,8 +174,8 @@ fi
 if [ -f /etc/krb5.conf ] ; then
         grep -q 'EXAMPLE' /etc/krb5.conf
         if [ "$?" -eq 0 ] ; then
-                echo "Your krb5.conf is the original version from RedHat"
-                echo " ... moving krb5.conf out of the way and putting in Fermilabs"
+                echo "   Your krb5.conf is the original version from RedHat"
+                echo "    ... moving krb5.conf out of the way and putting in Fermilabs"
                 /bin/mv -f /etc/krb5.conf /etc/krb5.conf.save.%{name}.%{version}.%{release}
                 /usr/krb5/config/config-krb5.conf %{version}
         fi
@@ -185,18 +192,20 @@ fi
 ###############################################################################
 %files
 %defattr(0644,root,root,0755)
-%doc krb5.conf.template
 %if 0%{?rhel} >= 7
 %attr(0700,root,root) %{_libexecdir}/%{name}/config-krb5.conf
+%{_libexecdir}/%{name}/krb5.conf.template
 %else
 %attr(0700,root,root) /usr/krb5/config/config-krb5.conf
 %attr(0755,root,root) /usr/krb5/config/makehostkeys
 %attr(0755,root,root) /usr/krb5/config/make-cron-keytab
+/usr/krb5/config/krb5.conf.template
 %endif
 
 %if 0%{?rhel} < 7 
 %files -n krb5-fermi-config
 %defattr(0644,root,root,0755)
+/usr/krb5/config/*
 %attr(0700,root,root) /usr/krb5/config/config-krb5.conf
 %attr(0755,root,root) /usr/krb5/config/makehostkeys
 %attr(0755,root,root) /usr/krb5/config/make-cron-keytab
@@ -205,10 +214,13 @@ fi
 %attr(0700,root,root) /usr/krb5/config/config-services
 %attr(0700,root,root) /usr/krb5/config/config-sshd_config
 %attr(0700,root,root) /usr/krb5/config/config-xinetd
-%attr(0644,root,root) /usr/krb5/config/*
 %endif
 
 %changelog
+* Wed Jan 17 2018 Pat Riehecky <riehecky@fnal.gov> 5.3-1.6
+- Fix permissions error in SLF6 packages
+- Move important items out of docdir for docker usage
+
 * Tue Jan 16 2018 Olga Terlyga <terlyga@fnal.gov> 5.3-1.5
 - Removed i-krb-6/8/17 from the list of KDCs
 - Edited [capath] section to reflect direct(only) trust between Windows domain and MIT realm
