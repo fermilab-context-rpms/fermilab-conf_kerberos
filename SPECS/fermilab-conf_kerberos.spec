@@ -77,14 +77,14 @@ mv outfile krb5.conf.d/25-fermilab-realm-fnal_gov.conf
 for i in $(ls krb5.conf.d/25-fermilab-realm*); do
   cat $i | grep -v '\[realms\]' > outfile
   mv outfile $i
-echo '[realms]' > krb5.conf.d/25-fermilab-realm-
+echo '[realms]' > krb5.conf.d/24-fermilab-realm.conf
 done
 
 %endif
 
 echo "# Fermilab krb5.conf v%{version} for Linux" > krb5.conf.template
 cat %{SOURCE2} >> krb5.conf.template
-%{__cat} krb5.conf.d/* >> krb5.conf.template
+%{__cat} krb5.conf.d/*.conf >> krb5.conf.template
 
 ###############################################################################
 %build

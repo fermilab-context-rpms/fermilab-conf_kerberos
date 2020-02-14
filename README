@@ -11,4 +11,26 @@ NOTE: From the checkout directory
   find SRPMS -type f 
 
 == Make Full Config ==
+
+NOTE: From the checkout directory
+
   make krb5conf > outfile
+
+== Make Koji Happy ==
+
+Koji requires anonymous access for things to really work right.
+Alas, CVS doesn't provide that at Fermilab.
+
+So here is my fairly hacky workaround....
+
+  cvs -d p-krb5conf@cdcvs.fnal.gov:/cvs/projects/krb5conf co krb5conf
+  mv krb5conf fermilab-conf_kerberos
+  cd fermilab-conf_kerberos
+  mv .cvsignore .gitignore
+  git cvsimport
+  git remote add gitlab https://:@hepcloud-git.fnal.gov:8443/fermi-rpms/fermilab-conf_kerberos.git
+  git push --force --set-upstream gitlab master
+
+You'll need the relevant commit rights to all these repos.  Then you can just:
+
+  koji build MYTAGNAME 'git+https://hepcloud-git.fnal.gov/fermi-rpms/fermilab-conf_kerberos.git?#HEAD'
