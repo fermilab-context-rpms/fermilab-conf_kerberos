@@ -1,5 +1,5 @@
-%define package_version 5.3
-%define package_release 1.6.1
+%define package_version 5.4
+%define package_release 1.1
 
 
 %if 0%{?rhel} >= 7 
@@ -17,7 +17,9 @@ Packager:	Fermilab Authentication Services
 Group:		Fermilab
 License:	MIT, freely distributable
 URL:		http://helpdesk.fnal.gov
-Source0:	http://computing.fnal.gov/authentication/krb5conf/Linux/krb5.conf
+
+Source0:	krb5.conf.d.tar.gz
+
 Source1:	config-krb5.conf
 
 # el6 sources
@@ -26,8 +28,9 @@ Source11:	make-cron-keytab
 Source12:	krb5-fermi-config.tar.gz
 
 BuildArch:	noarch
-BuildRequires:	coreutils augeas
+BuildRequires:	coreutils augeas sed
 Requires:	krb5-libs coreutils policycoreutils
+
 %if 0%{?rhel} >= 7 
 Obsoletes:	krb5-fermi-krb5.conf krb5-fermi-config
 %else
@@ -38,8 +41,10 @@ Conflicts:	krb5-fermi-config
 This rpm provides a krb5.conf file setup to work with the FNAL.GOV
 kerberos realm.
 
+%if 0%{?rhel} == 7 
 You can automatically customize your default KDCs by placing them one per
 line in %{_sysconfdir}/krb5.kdclist
+%endif
 
 
 %if 0%{?rhel} < 7 
@@ -62,32 +67,82 @@ be in Fermilab's kerberos realm
 
 ###############################################################################
 %prep
-%{__cp} %{SOURCE0} krb5.conf.template
+%setup -q -c krb5.conf.d
+
+
+%if 0%{?rhel} <= 7
+sed -e 's/.*FNAL.GOV.*=.*{/&\n\n#BEGINTAG-KDCLIST\n/' krb5.conf.d/25-fermilab-realm-fnal_gov.conf | sed '/\skdc[^\n]*/,$!b;//{x;//p;g};//!H;$!d;x;s//&\n\n#ENDTAG-KDCLIST\n/' > outfile
+mv outfile krb5.conf.d/25-fermilab-realm-fnal_gov.conf
+
+for i in $(ls krb5.conf.d/25-fermilab-realm*); do
+  cat $i | grep -v '\[realms\]' > outfile
+  mv outfile $i
+echo '[realms]' > krb5.conf.d/25-fermilab-realm-
+done
+
+%endif
+
+cat > krb5.conf.template <<EOF
+# Fermilab krb5.conf v%{version} for Linux
+#
+##########################################################################
+# For EL6 and EL7 users:
+#
+# The list of Fermilab KDCs between the BEGINTAG/ENDTAG-KDCLIST
+# comment lists will be replaced with local KDC list from the
+# file /etc/krb5.kdclist (if found).
+#
+# HowTo for System Administrators: 
+#
+# Use a local KDC search list to reduce the load on the primary KDC
+# particularly if a semi-dedicated Slave KDC is located in your subnets.
+#
+# Re-order the FNAL.GOV KDC list located between the #BEGINTAG/#ENDTAG lines.
+# Then save this section of krb5.conf as the file /etc/krb5.kdclist
+# (including the #BEGINTAG/#ENDTAG lines).
+#
+# This will preserve your KDC order during future krb5.conf upgrades.
+###########################################################################
+EOF
+%{__cat} krb5.conf.d/* >> krb5.conf.template
 
 ###############################################################################
 %build
 TMPFILE='augtool.script'
 FILENAME=$(readlink -f krb5.conf.template)
 cat > ${TMPFILE} <<EOF
+rm /augeas/load/Krb5/incl
+rm /augeas/load/Krb5/incl
+rm /augeas/load/Krb5/incl
 set /augeas/load/Krb5/incl "${FILENAME}"
 load
 
 get /files/${FILENAME}/realms/realm[. = 'FNAL.GOV']
 EOF
 
-augtool --noload < ${TMPFILE} > parse.out
-if [[ $? -ne 0 ]]; then
+cat ${TMPFILE}
+DOMAIN=$(augtool --noload < ${TMPFILE} | tail -1 | grep -o '[^ ]*$')
+if [[ "x${DOMAIN}" != 'xFNAL.GOV' ]]; then
+    echo "Failed to parse krb5.conf"
     exit 1
 fi
-rm -rf %{buildroot}
-mkdir -p %{buildroot}
 
 ###############################################################################
 %install
+rm -rf %{buildroot}
+mkdir -p %{buildroot}
 
 %if 0%{?rhel} >= 7
+mkdir -p %{buildroot}/%{_sysconfdir}/krb5.conf.d/
+
+%if 0%{?rhel} >= 8
+
+cp krb5.conf.d/* %{buildroot}/%{_sysconfdir}/krb5.conf.d/
+
+%else
 %{__install} -D %{SOURCE1} %{buildroot}/%{_libexecdir}/%{name}/config-krb5.conf
 %{__install} -D krb5.conf.template %{buildroot}/%{_libexecdir}/%{name}/krb5.conf.template
+%endif
 
 %else
 (cd %{buildroot} ; tar xvf %{SOURCE12} ; mv krb5-fermi-config/* . ; rmdir krb5-fermi-config )
@@ -98,6 +153,7 @@ mkdir -p %{buildroot}
 %endif
 
 ###############################################################################
+%if 0%{?rhel} < 8
 %check
 %if 0%{?rhel} >= 7
 bash -n %{buildroot}/%{_libexecdir}/%{name}/config-krb5.conf
@@ -187,13 +243,18 @@ if [ -d /etc/xinetd.d ] ; then
         /usr/krb5/config/config-xinetd %{version} >> /tmp/fermi.krb5.config.xinetd
 fi
 
+%endif
 
 %endif
 
 ###############################################################################
 %files
 %defattr(0644,root,root,0755)
-%if 0%{?rhel} >= 7
+
+%if 0%{?rhel} >= 8
+%config(noreplace) %{_sysconfdir}/krb5.conf.d/*
+%else
+%if 0%{?rhel} == 7
 %attr(0700,root,root) %{_libexecdir}/%{name}/config-krb5.conf
 %{_libexecdir}/%{name}/krb5.conf.template
 %else
@@ -201,6 +262,7 @@ fi
 %attr(0755,root,root) /usr/krb5/config/makehostkeys
 %attr(0755,root,root) /usr/krb5/config/make-cron-keytab
 /usr/krb5/config/krb5.conf.template
+%endif
 %endif
 
 %if 0%{?rhel} < 7 
@@ -218,6 +280,9 @@ fi
 %endif
 
 %changelog
+* Thu Nov 14 2019 Brittany Driggers <brbossa@fnal.gov> 5.4-1
+- Update KDC list per CHG000000016873
+
 * Tue Jan 23 2018 Pat Riehecky <riehecky@fnal.gov> 5.3-1.6.1
 - Add missing mkdir_p to config-krb5.conf script
 
