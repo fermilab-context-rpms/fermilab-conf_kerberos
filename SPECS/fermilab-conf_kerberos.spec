@@ -19,8 +19,8 @@ License:	MIT, freely distributable
 URL:		http://helpdesk.fnal.gov
 
 Source0:	krb5.conf.d.tar.gz
-
 Source1:	config-krb5.conf
+Source2:	EL7_header
 
 # el6 sources
 Source10:	makehostkeys
@@ -82,28 +82,8 @@ done
 
 %endif
 
-cat > krb5.conf.template <<EOF
-# Fermilab krb5.conf v%{version} for Linux
-#
-##########################################################################
-# For EL6 and EL7 users:
-#
-# The list of Fermilab KDCs between the BEGINTAG/ENDTAG-KDCLIST
-# comment lists will be replaced with local KDC list from the
-# file /etc/krb5.kdclist (if found).
-#
-# HowTo for System Administrators: 
-#
-# Use a local KDC search list to reduce the load on the primary KDC
-# particularly if a semi-dedicated Slave KDC is located in your subnets.
-#
-# Re-order the FNAL.GOV KDC list located between the #BEGINTAG/#ENDTAG lines.
-# Then save this section of krb5.conf as the file /etc/krb5.kdclist
-# (including the #BEGINTAG/#ENDTAG lines).
-#
-# This will preserve your KDC order during future krb5.conf upgrades.
-###########################################################################
-EOF
+echo "# Fermilab krb5.conf v%{version} for Linux" > krb5.conf.template
+cat %{SOURCE2} >> krb5.conf.template
 %{__cat} krb5.conf.d/* >> krb5.conf.template
 
 ###############################################################################
