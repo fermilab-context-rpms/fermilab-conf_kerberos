@@ -1,3 +1,5 @@
+https://cdcvs.fnal.gov/redmine/projects/krb5conf
+
 == Checkout ==
 
   cvs -d p-krb5conf@cdcvs.fnal.gov:/cvs/projects/krb5conf co krb5conf
