@@ -10,3 +10,5 @@ NOTE: From the checkout directory
   find RPMS -type f 
   find SRPMS -type f 
 
+== Make Full Config ==
+  make krb5conf > outfile
