@@ -80,6 +80,12 @@ for i in $(ls krb5.conf.d/25-fermilab-realm*); do
 echo '[realms]' > krb5.conf.d/25-fermilab-realm-00000.conf
 done
 
+for i in $(ls krb5.conf.d/24-fermilab-domain_realm*); do
+  cat $i | grep -v '\[domain_realm\]' > outfile
+  mv outfile $i
+echo '[domain_realm]' > krb5.conf.d/24-fermilab-domain_realm-00000.conf
+done
+
 %endif
 
 echo "# Fermilab krb5.conf v%{version} for Linux" > krb5.conf.template
