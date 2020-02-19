@@ -266,6 +266,9 @@ fi
 %endif
 
 %changelog
+* Wed Feb 19 2020 Brittany Driggers <brbossa@fnal.gov> 5.5-1
+- Update libdefaults and appdefaults per CHG000000016874
+
 * Thu Nov 14 2019 Brittany Driggers <brbossa@fnal.gov> 5.4-1
 - Update KDC list per CHG000000016873
 
