@@ -1,5 +1,5 @@
 %define package_version 5.5
-%define package_release 1
+%define package_release 2
 
 
 %if 0%{?rhel} >= 7 
@@ -266,6 +266,9 @@ fi
 %endif
 
 %changelog
+* Thu Mar 12 2020 Pat Riehecky <riehecky@fnal.gov> 5.5-2
+- Fix config-krb5.conf per INC000001095707
+
 * Wed Feb 19 2020 Brittany Driggers <brbossa@fnal.gov> 5.5-1
 - Update libdefaults and appdefaults per CHG000000016874
 
