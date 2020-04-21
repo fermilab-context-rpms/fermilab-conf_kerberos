@@ -33,6 +33,7 @@ Requires:	krb5-libs coreutils policycoreutils
 
 %if 0%{?rhel} >= 7 
 Obsoletes:	krb5-fermi-krb5.conf krb5-fermi-config
+Suggests:	krb5-workstation
 %else
 Conflicts:	krb5-fermi-config
 %endif
