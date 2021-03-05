@@ -31,9 +31,11 @@ BuildArch:	noarch
 BuildRequires:	coreutils augeas sed
 Requires:	krb5-libs coreutils policycoreutils
 
-%if 0%{?rhel} >= 7 
+%if 0%{?rhel} >= 7
 Obsoletes:	krb5-fermi-krb5.conf krb5-fermi-config
+%if 0%{?rhel} >= 8
 Recommends:	krb5-workstation
+%endif
 %else
 Conflicts:	krb5-fermi-config
 %endif
