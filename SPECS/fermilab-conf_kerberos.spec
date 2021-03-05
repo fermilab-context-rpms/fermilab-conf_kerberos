@@ -1,4 +1,4 @@
-%define package_version 5.5
+%define package_version 5.6
 %define package_release 2
 
 
@@ -267,6 +267,9 @@ fi
 %endif
 
 %changelog
+* Fri Mar 5 2021 Brittany Driggers <brbossa@fnal.gov> 5.6-1
+- Update libdefaults to remove DES per change CHG000000018746
+
 * Thu Mar 12 2020 Pat Riehecky <riehecky@fnal.gov> 5.5-2
 - Fix config-krb5.conf per INC000001095707
 
