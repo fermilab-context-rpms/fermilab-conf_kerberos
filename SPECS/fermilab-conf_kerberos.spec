@@ -1,5 +1,5 @@
 %define package_version 5.6
-%define package_release 2
+%define package_release 1
 
 
 %if 0%{?rhel} >= 7 
