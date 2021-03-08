@@ -9,7 +9,11 @@ Name:		krb5-fermi-krb5.conf
 %endif
 
 Version:	%{package_version}
+%if 0%{?rhel} >= 8
+Release:	%{package_release}
+%else
 Release:	%{package_release}%{?dist}
+%endif
 Summary:	A krb5.conf file setup to work with the FNAL.GOV kerberos realm
 
 Packager:	Fermilab Authentication Services
