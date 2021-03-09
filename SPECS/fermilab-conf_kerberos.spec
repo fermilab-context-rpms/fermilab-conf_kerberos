@@ -1,5 +1,5 @@
 %define package_version 5.6
-%define package_release 1
+%define package_release 2
 
 
 %if 0%{?rhel} >= 7 
@@ -273,6 +273,9 @@ fi
 %endif
 
 %changelog
+* Tue Mar 9 2021 Pat Riehecky <riehecky@fnal.gov> 5.6-2
+- Tag EL8 vs EL7 package so folks know which is which
+
 * Fri Mar 5 2021 Brittany Driggers <brbossa@fnal.gov> 5.6-1
 - Update libdefaults to remove DES per change CHG000000018746
 
