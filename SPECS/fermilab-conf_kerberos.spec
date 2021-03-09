@@ -1,5 +1,5 @@
 %define package_version 5.6
-%define package_release 2
+%define package_release 1
 
 
 %if 0%{?rhel} >= 7 
@@ -39,7 +39,6 @@ Requires:	krb5-libs coreutils policycoreutils
 Obsoletes:	krb5-fermi-krb5.conf krb5-fermi-config
 %if 0%{?rhel} >= 8
 Recommends:	krb5-workstation
-Conflicts:	system-release < 8
 %endif
 %else
 Conflicts:	krb5-fermi-config
@@ -274,9 +273,6 @@ fi
 %endif
 
 %changelog
-* Tue Mar 9 2021 Pat Riehecky <riehecky@fnal.gov> 5.6-2
-- Tag EL8 vs EL7 package so folks know which is which
-
 * Fri Mar 5 2021 Brittany Driggers <brbossa@fnal.gov> 5.6-1
 - Update libdefaults to remove DES per change CHG000000018746
 
