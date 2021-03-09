@@ -5,6 +5,16 @@ https://cdcvs.fnal.gov/redmine/projects/krb5conf
   export CVS_RSH=/usr/bin/ssh
   cvs -d p-krb5conf@cdcvs.fnal.gov:/cvs/projects/krb5conf co krb5conf
 
+== Make Config changes ==
+
+The config file is broken out into sections under:
+
+  SOURCES/krb5.conf.d/
+
+You can test your changes have gone into effect and will be packaged with:
+
+  make krb5conf | less
+
 == Make RPM ==
 NOTE: From the checkout directory
 
