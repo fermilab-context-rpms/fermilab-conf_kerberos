@@ -39,6 +39,7 @@ Requires:	krb5-libs coreutils policycoreutils
 Obsoletes:	krb5-fermi-krb5.conf krb5-fermi-config
 %if 0%{?rhel} >= 8
 Recommends:	krb5-workstation
+Conflicts:	system-release < 8
 %endif
 %else
 Conflicts:	krb5-fermi-config
