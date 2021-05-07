@@ -1,4 +1,4 @@
-%define package_version 5.6
+%define package_version 5.7
 %define package_release 1
 
 
