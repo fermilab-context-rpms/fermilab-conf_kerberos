@@ -273,6 +273,9 @@ fi
 %endif
 
 %changelog
+* Fri May 7 2021 Brittany Driggers <brbossa@fnal.gov> 5.7-1
+- Add lines in KDC list per CHG000000017540
+
 * Fri Mar 5 2021 Brittany Driggers <brbossa@fnal.gov> 5.6-1
 - Update libdefaults to remove DES per change CHG000000018746
 
