@@ -12,7 +12,7 @@ sources:
 	cd SOURCES && tar acf krb5.conf.d.tar.gz --exclude 'CVS' krb5.conf.d
 	rpmbuild -bs --define "%_topdir `pwd`" SPECS/fermilab-conf_kerberos.spec
 
-rpm:
+rpm: sources
 	rpmbuild -ba --define "%_topdir `pwd`" SPECS/fermilab-conf_kerberos.spec
 
 krb5conf:
