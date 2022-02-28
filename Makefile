@@ -2,6 +2,7 @@ _default:
 	@echo "make"
 	@echo "Did you mean"
 	@echo "make sources?"
+	@echo "make srpm?"
 	@echo "make rpm?"
 	@echo "make krb5conf?"
 	@echo "make mac-krb5conf?"
@@ -14,6 +15,9 @@ sources:
 
 rpm: sources
 	rpmbuild -ba --define "%_topdir `pwd`" SPECS/fermilab-conf_kerberos.spec
+
+srpm: sources
+	rpmbuild -bs --define "%_topdir `pwd`" SPECS/fermilab-conf_kerberos.spec
 
 krb5conf:
 	@rm -rf /tmp/krb5conf_all_in_one
