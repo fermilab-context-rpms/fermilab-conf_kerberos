@@ -48,4 +48,4 @@ So here is my fairly hacky workaround....
 
 You'll need the relevant commit rights to all these repos.  Then you can just:
 
-  koji build MYTAGNAME 'git+https://hepcloud-git.fnal.gov/fermi-rpms/fermilab-conf_kerberos.git?#HEAD'
+  koji build MYTAGNAME 'git+https://github.com/fermilab-context-rpms/fermilab-conf_kerberos.git?#HEAD'
