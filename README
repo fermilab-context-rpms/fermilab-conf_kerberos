@@ -43,8 +43,8 @@ So here is my fairly hacky workaround....
   git cvsimport
   git mv .cvsignore .gitignore
   git commit -m 'move from CVS'
-  git remote add gitlab https://:@hepcloud-git.fnal.gov:8443/fermi-rpms/fermilab-conf_kerberos.git
-  git push --force --set-upstream gitlab master
+  git remote add github git@github.com:fermilab-context-rpms/fermilab-conf_kerberos.git
+  git push --force --set-upstream github master
 
 You'll need the relevant commit rights to all these repos.  Then you can just:
 
