@@ -9,11 +9,7 @@ Name:		krb5-fermi-krb5.conf
 %endif
 
 Version:	%{package_version}
-%if 0%{?rhel} >= 8
-Release:	%{package_release}
-%else
 Release:	%{package_release}%{?dist}
-%endif
 Summary:	A krb5.conf file setup to work with the FNAL.GOV kerberos realm
 
 Packager:	Fermilab Authentication Services
@@ -130,10 +126,10 @@ mkdir -p %{buildroot}/%{_sysconfdir}/krb5.conf.d/
 
 %if 0%{?rhel} >= 8
 
-for file in $(cd krb5.conf.d/ ; ls);
-  sed -i '1 i\### YOUR CHANGES HERE WILL BE REVERTED BY THIS PACAKGE ###' $file
-  sed -i '1 i\###   THIS FILE IS MANAGED BY fermilab-conf_kerberos   ###' $file
-do 
+for filename in $(cd krb5.conf.d/ ; ls); do
+  sed -i '1 i\### YOUR CHANGES HERE WILL BE REVERTED BY THIS PACAKGE ###' krb5.conf.d/${filename}
+  sed -i '1 i\###   THIS FILE IS MANAGED BY fermilab-conf_kerberos   ###' krb5.conf.d/${filename}
+done
 
 cp krb5.conf.d/* %{buildroot}/%{_sysconfdir}/krb5.conf.d/
 
