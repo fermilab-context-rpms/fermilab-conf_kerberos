@@ -1,5 +1,5 @@
 %define package_version 5.7
-%define package_release 1
+%define package_release 2
 
 
 %if 0%{?rhel} >= 7 
@@ -130,7 +130,13 @@ mkdir -p %{buildroot}/%{_sysconfdir}/krb5.conf.d/
 
 %if 0%{?rhel} >= 8
 
+for file in $(cd krb5.conf.d/ ; ls);
+  sed -i '1 i\### YOUR CHANGES HERE WILL BE REVERTED BY THIS PACAKGE ###' $file
+  sed -i '1 i\###   THIS FILE IS MANAGED BY fermilab-conf_kerberos   ###' $file
+do 
+
 cp krb5.conf.d/* %{buildroot}/%{_sysconfdir}/krb5.conf.d/
+
 
 %else
 %{__install} -D %{SOURCE1} %{buildroot}/%{_libexecdir}/%{name}/config-krb5.conf
@@ -245,7 +251,7 @@ fi
 %defattr(0644,root,root,0755)
 
 %if 0%{?rhel} >= 8
-%config(noreplace) %{_sysconfdir}/krb5.conf.d/*
+%config %{_sysconfdir}/krb5.conf.d/*
 %else
 %if 0%{?rhel} == 7
 %attr(0700,root,root) %{_libexecdir}/%{name}/config-krb5.conf
@@ -273,6 +279,9 @@ fi
 %endif
 
 %changelog
+* Wed Mar 16 2022 Pat Riehecky <riehecky@fnal.gov> 5.7-2
+- Note ownership of the conf.d files
+
 * Fri May 7 2021 Brittany Driggers <brbossa@fnal.gov> 5.7-1
 - Add lines in KDC list per CHG000000017540
 
