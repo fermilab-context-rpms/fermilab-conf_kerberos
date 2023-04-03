@@ -275,6 +275,9 @@ fi
 %endif
 
 %changelog
+* Fri Mar 24 2023 Travis Hountondji <thounton@fnal.gov> 5.7-3
+- Update 24-fermilab-domain_realm_nfs.conf per CHG000000021553
+ 
 * Wed Mar 16 2022 Pat Riehecky <riehecky@fnal.gov> 5.7-2
 - Note ownership of the conf.d files
 
